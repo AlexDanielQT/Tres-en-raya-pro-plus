@@ -44,63 +44,125 @@ GAME LOOP
 
 ## Mejoras implementadas (Trabajo 01)
 
-### 1. Entidades Gráficas mejoradas
+Cada mejora se describe comparando directamente con el código original (`3enRaya.py`).
 
-**FichaX**
-- Diseño con dos trazos diagonales estilizados de grosor variable.
-- Puntos decorativos en los extremos con color más claro.
-- Animación de aparición: la ficha crece desde escala 0 hasta 1.0 al ser colocada.
-- Soporte de rotación mediante transformaciones geométricas (`pygame.transform.rotate`).
+---
 
-**FichaO**
-- Diseño de doble circunferencia: exterior con color atenuado, interior con color principal.
-- Animación de aparición idéntica a FichaX (escala progresiva desde cero).
-- Soporte de rotación.
+### 1. Entidades Gráficas
 
-**Tablero**
-- Fondo oscuro diferenciado del resto de la pantalla.
-- Marco exterior visible con color personalizable.
-- Resaltado suave de las celdas ganadoras (fondo dorado semitransparente).
-- Separación visual clara entre la cuadrícula y el panel lateral.
+#### FichaX (antes: clase `X`)
 
-**Cursor**
-- Cambia de color según el jugador activo: rojo para X, cian para O.
-- Diseño de cuatro segmentos de esquina (en lugar de un rectángulo simple).
-- Efecto pulsante suave: la opacidad oscila usando `math.sin`.
+| Aspecto | Original | Pro+ |
+|---|---|---|
+| Nombre de clase | `X` | `FichaX` |
+| Grosor de trazos | `1` px | `5` px (trazo principal) |
+| Posición de las líneas | Esquina a esquina `(0,0)→(3e,3e)` | Con margen interior (`margen = e * 0.28`) |
+| Detalle visual | Ninguno | Punto circular en cada extremo con color aclarado en `+60` |
+| Animación | Sin animación | `escala_aparicion`: crece de `0.05` a `1.0` al colocarse |
 
-### 2. Entidades Lógicas mejoradas
+La ficha original dibujaba dos líneas simples de un píxel de extremo a extremo de la celda. La versión Pro+ agrega margen para que la X no ocupe toda la celda, aumenta el grosor, dibuja un punto decorativo en cada extremo con un color más claro calculado dinámicamente, y aplica una animación de aparición progresiva escalando el lienzo antes de renderizarlo.
 
-**TresEnRaya**
-- Mantiene y valida la matriz 3×3.
-- Gestiona los turnos y el cambio automático entre jugadores.
-- Detecta ganador en filas, columnas y ambas diagonales.
-- Almacena las celdas ganadoras para comunicarlas a la capa gráfica.
-- Detecta empate cuando el tablero está lleno sin ganador.
-- **Estadísticas acumuladas** entre partidas: contador de partidas, victorias de X, victorias de O y empates.
+#### FichaO (antes: clase `O`)
 
-**Cursor**
-- Trabaja en coordenadas lógicas (fila, columna). La Escena transforma a píxeles.
-- Límites de movimiento correctos: no sale de la cuadrícula.
-- Estado de turno para adaptar su color visual.
+| Aspecto | Original | Pro+ |
+|---|---|---|
+| Nombre de clase | `O` | `FichaO` |
+| Circunferencias | Una sola, grosor `1` | Dos: exterior (grosor `2`, color atenuado) + interior (grosor `5`, color principal) |
+| Radio | `3e/2` (ocupa toda la celda) | Exterior ajustado con margen; interior al `62%` del exterior |
+| Animación | Sin animación | `escala_aparicion`: mismo mecanismo que `FichaX` |
+
+La ficha original era un único círculo delgado que ocupaba toda la celda. La versión Pro+ introduce una doble circunferencia: la exterior usa el mismo color base reducido en 65 puntos por canal (simulando un degradado), y la interior es la principal con mayor grosor. Ambas se escalan durante la animación de aparición.
+
+#### Tablero
+
+| Aspecto | Original | Pro+ |
+|---|---|---|
+| Fondo | Sin fondo (transparente) | Fondo oscuro `(18, 18, 38)` |
+| Marco exterior | Sin marco | Marco de `3` px con color `(170, 170, 200)` |
+| Grosor de líneas | `1` px | `2` px |
+| Celdas ganadoras | Sin resaltado | Fondo dorado semitransparente `(240, 200, 60, 45)` sobre las celdas ganadoras |
+
+El tablero original era solo cuatro líneas blancas sobre fondo negro. La versión Pro+ agrega un fondo propio para la cuadrícula, un marco exterior visible, líneas más gruesas y la capacidad de recibir una lista de celdas ganadoras desde la Escena para resaltarlas sin conocer las reglas del juego.
+
+#### Cursor
+
+| Aspecto | Original | Pro+ |
+|---|---|---|
+| Forma | Rectángulo interior simple | Cuatro segmentos de esquina (estilo targeting) |
+| Color | Amarillo fijo `(255,255,0)` pasado como parámetro | Dinámico: rojo `(220,80,80)` para X, cian `(80,200,230)` para O |
+| Animación | Sin animación | Pulso suave de opacidad entre 160 y 220 usando `math.sin(_pulso)` |
+| Estado de turno | No tenía | Método `setTurno()` para adaptar el color |
+| `update()` | No existía | Avanza `_pulso` en cada frame |
+
+---
+
+### 2. Entidades Lógicas
+
+#### TresEnRaya
+
+| Aspecto | Original | Pro+ |
+|---|---|---|
+| Celdas ganadoras | No se almacenaban | Lista `celdas_ganadoras` con las `(fila, col)` que forman la línea ganadora |
+| Estadísticas | No existían | `victorias_x`, `victorias_o`, `empates`, `partidas` — persisten entre reiniciadas |
+| `jugar()` | Ignora si hay empate activo | Retorna `False` si ya hay empate, evitando jugadas extra |
+| Métodos nuevos | — | `getCeldasGanadoras()`, `getEstadisticas()` |
+| `reiniciar()` | Resetea todo | Solo resetea el estado de la partida; las estadísticas se conservan |
+
+#### Cursor
+
+| Aspecto | Original | Pro+ |
+|---|---|---|
+| `setTurno()` | No existía | Añadido para que el Cursor conozca el turno activo y adapte su color |
+| `update()` | No existía | Añadido para avanzar la animación de pulso en cada frame |
+
+---
 
 ### 3. Animaciones
 
-- **Fichas:** aparición progresiva desde tamaño cero al ser colocadas (`escala_aparicion` de 0.05 → 1.0).
-- **Cursor:** pulso continuo de opacidad mediante `math.sin` actualizado en cada frame.
-- **Mensaje de fin de juego:** parpadeo suave con transparencia variable.
+| Animación | Original | Pro+ |
+|---|---|---|
+| Indicador de turno | Pulsación de tamaño en `xTurno` / `oTurno` (entidades X y O separadas) | Eliminado; reemplazado por panel lateral con ficha miniatura estática |
+| Fichas al colocarse | Aparecen instantáneamente | Crecen desde escala `0.05` hasta `1.0` en ~12 frames (`+0.08` por frame) |
+| Cursor | Estático | Pulso continuo de opacidad con `math.sin` |
+| Fin de juego | Sin efecto | Parpadeo suave del mensaje usando `math.sin(_parpadeo)` |
+
+El original animaba el tamaño de las entidades `xTurno` / `oTurno` incrementando y revirtiendo `self.e`. La versión Pro+ elimina esas entidades independientes y centraliza la información del turno en el panel lateral, mientras incorpora animaciones más relevantes: la aparición de cada ficha al ser colocada y el pulso del cursor.
+
+---
 
 ### 4. Efectos de fin de juego
 
-- Las celdas ganadoras se resaltan con un fondo dorado semitransparente en el tablero.
-- Mensaje de victoria o empate visible en el panel lateral con parpadeo animado.
-- El color del mensaje coincide con el color del jugador ganador.
-- Indicación de cómo reiniciar la partida.
+En el original, el juego simplemente dejaba de procesar input cuando había ganador o empate, sin ningún efecto visual adicional ni mensaje en pantalla.
 
-### 5. Panel de información
+La versión Pro+ agrega:
+- Resaltado dorado semitransparente sobre las tres celdas ganadoras (gestionado por `Tablero.set_celdas_ganadoras()`).
+- Ocultamiento del cursor una vez terminada la partida.
+- Mensaje de fin `"¡GANA X!"`, `"¡GANA O!"` o `"EMPATE"` en el panel lateral con parpadeo animado.
+- El color del mensaje corresponde al color del jugador ganador.
+- Texto de ayuda `"Presiona R para reiniciar"` visible mientras el juego está terminado.
 
-- Indicador del turno activo con ficha miniatura renderizada en tiempo real.
-- Panel de estadísticas persistentes (no se borran al reiniciar la partida).
-- Barra de ayuda de controles en la parte inferior de la pantalla.
+---
+
+### 5. Panel lateral de información (nuevo)
+
+El original no tenía panel de información. La versión Pro+ introduce `_renderPanel()` en la Escena con:
+- **Indicador de turno:** nombre del jugador activo y una ficha miniatura renderizada con las mismas clases `FichaX` / `FichaO`, a escala reducida (`e // 2`).
+- **Estadísticas persistentes:** partidas jugadas, victorias de X, victorias de O y empates. Se conservan al reiniciar con R.
+- **Barra de controles:** texto de ayuda fijo en la parte inferior de la ventana.
+
+---
+
+### 6. Game Loop y ventana
+
+| Aspecto | Original | Pro+ |
+|---|---|---|
+| Tamaño de ventana | `600 × 400` px | `880 × 620` px |
+| Escala base (`e`) | `30` | `55` |
+| Fondo | Negro `(0,0,0)` | Azul muy oscuro `(14, 14, 28)` |
+| Tecla ESC | Sin manejar | Cierra el juego correctamente |
+| Tecla R | Sin manejar | Reinicia la partida conservando estadísticas |
+| Estructura | Código suelto al nivel del módulo | Encapsulado en función `main()` |
+| `import sys` | Faltaba (bug: `sys.exit()` sin importar) | Presente y correcto |
 
 ---
 
