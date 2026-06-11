@@ -24,7 +24,7 @@ ANÁLISIS DE REUTILIZACIÓN:
     ✔ EscenaTresEnRaya    → EscenaConecta4
 
 ─────────────────────────────────────────────────────────────────
-ARQUITECTURA :
+ARQUITECTURA (igual que Trabajo 01):
 
   GAME LOOP
   │
@@ -52,7 +52,7 @@ import sys
 import pygame
 
 # ═══════════════════════════════════════════════════════════════════
-#  ENTIDADES GRÁFICAS  —
+#  ENTIDADES GRÁFICAS  — REUTILIZADAS DEL TRABAJO 01 SIN CAMBIOS
 #  Solo se añade FichaCirculo para el estilo clásico del Conecta 4
 # ═══════════════════════════════════════════════════════════════════
 
@@ -142,16 +142,16 @@ class FichaCirculo(EntidadGrafica):
         pantalla.blit(rotado, rect)
 
 
-# Alias para mantener compatibilidad con la arquitectura (mismo nombre de clase en la escena)
-FichaX = FichaCirculo
-FichaO = FichaCirculo
+# Alias para mantener compatibilidad con la arquitectura 
+FichaR = FichaCirculo
+FichaA = FichaCirculo
 
 
 class Tablero(EntidadGrafica):
     """
     Entidad Gráfica: cuadrícula del Conecta 4.
     ── ADAPTADA DEL TRABAJO 01 ──
-    Cambios: ahora soporta COLS x FILAS configurables (7×6 por defecto).
+    Cambios: ahora soporta COLS x FILAS configurables .
     Estética: fondo azul oscuro clásico del Conecta 4, huecos vacíos visibles.
     """
 
@@ -200,7 +200,7 @@ class Tablero(EntidadGrafica):
             self.color_marco,
             (0, 0, ancho + 8, alto + 8),
             self.GROSOR_MARCO,
-            border_radius=10,
+            border_radius=12,
         )
 
         rotado = pygame.transform.rotate(lienzo, self.alfa)
@@ -308,7 +308,12 @@ class Conecta4:
 
     def _inicializar_estado(self):
         self.matriz = [
-            [self.VACIO] * self.COLS for _ in range(self.FILAS)
+            [self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO],
+            [self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO],
+            [self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO],
+            [self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO],
+            [self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO],
+            [self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO, self.VACIO],
         ]
         self.turno = self.FICHA_J1
         self.ganador = self.VACIO
@@ -434,6 +439,7 @@ class Conecta4:
 
 # ═══════════════════════════════════════════════════════════════════
 #  ESCENA PRINCIPAL
+#  ── ADAPTADA DE EscenaTresEnRaya ──
 #  Misma estructura: Input → Update → Render
 #  Cambios: coordina las nuevas entidades (Conecta4, Tablero 7×6)
 # ═══════════════════════════════════════════════════════════════════
@@ -540,13 +546,13 @@ class EscenaConecta4:
                 escala = self._escala_fichas.get((fila, col), 1.0)
 
                 if matriz[fila][col] == Conecta4.FICHA_J1:
-                    ficha = FichaX(x, y, self.e)
+                    ficha = FichaR(x, y, self.e)
                     ficha.setColor(self.COLOR_J1)
                     ficha.escala_aparicion = escala
                     ficha.render(pantalla)
 
                 elif matriz[fila][col] == Conecta4.FICHA_J2:
-                    ficha = FichaO(x, y, self.e)
+                    ficha = FichaA(x, y, self.e)
                     ficha.setColor(self.COLOR_J2)
                     ficha.escala_aparicion = escala
                     ficha.render(pantalla)
@@ -572,11 +578,11 @@ class EscenaConecta4:
 
             # Miniatura de ficha del turno
             if turno == Conecta4.FICHA_J1:
-                fx = FichaX(panel_x, 112, e // 2)
+                fx = FichaR(panel_x, 112, e // 2)
                 fx.setColor(self.COLOR_J1)
                 fx.render(pantalla)
             else:
-                fo = FichaO(panel_x, 112, e // 2)
+                fo = FichaA(panel_x, 112, e // 2)
                 fo.setColor(self.COLOR_J2)
                 fo.render(pantalla)
 
@@ -661,7 +667,8 @@ class EscenaConecta4:
 
 
 # ═══════════════════════════════════════════════════════════════════
-#  GAME LOOP — 
+#  GAME LOOP — REUTILIZADO DEL TRABAJO 01 SIN CAMBIOS ESTRUCTURALES
+#  TAMAÑOS ARREGLADOS
 # ═══════════════════════════════════════════════════════════════════
 
 
